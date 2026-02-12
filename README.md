@@ -17,13 +17,13 @@ Unlike static widgets, this script draws a dynamic calendar directly onto your c
 ### 1. Requirements
 
 * Install the **[Scriptable](https://www.google.com/search?q=https://apps.apple.com/app/scriptable/id1405459188)** app from the App Store.
-* Install the **[Shortcuts](#-source-code)**.
+* Install the **Shortcuts** (Atalhos) app (built-in on iOS).
 
 ### 2. Scriptable Setup
 
 1. Open Scriptable and create a new script by clicking the **+** icon.
 2. Name it `LockScreenCalendar`.
-3. Copy and paste the code provided in the [Source Code](https://www.google.com/search?q=%23source-code) section below.
+3. Copy and paste the code provided in the **[Source Code](#-source-code)** section below.
 4. Save and close.
 
 ### 3. Shortcut Setup
