@@ -39,8 +39,26 @@ To make this work as a wallpaper, you need to create a simple Shortcut:
 4. (Optional) Set an **Automation** to run this shortcut every day at 00:01 AM to keep the date updated.
 
 ---
+## ⚠️ Important Considerations
+* **Daily Automation:** Since the script generates a static image, the date will not change automatically. You **must** set up a "Time of Day" automation in the Shortcuts app to run at **12:00 AM (midnight)**. This ensures the calendar refreshes and marks the new day every 24 hours.
+* **Clock Overlap:** Depending on your iPhone model (especially those with the Dynamic Island), the calendar might overlap with the iOS clock. Simply adjust the `monthOffsetY` or `START_Y` variables in the `CONFIG` section of the code to move it.
+* **Permissions:** When running for the first time, make sure to grant Scriptable permission to access your **Photos** and **File Manager**.
 
+To ensure the script correctly fetches your background every time, follow these steps:
+* **Dedicated Album:** Place your desired background photo **alone** in a specifically created album (e.g., named "Wallpaper").
+* **Shortcut Filtering:** Configure your Shortcut to fetch the latest image from that specific album. This prevents errors or the script picking up the wrong media from your gallery.
+---
+## 🔗 Links & Media
+
+### Screenshots
+
+### Download & Resources
+* 📥 **[iOS Shortcut](https://www.icloud.com/shortcuts/e4394783a9294570bfd42d9388f12382)** - Click here to import the shortcut to your iPhone.
+* 📜 **[Scriptable Code](#-source-code)** - Jump directly to the script code below.
+---
 ## 📄 Source Code
+
+---
 
 ```javascript
 // Tela de bloqueio estilo Samsung IOS
