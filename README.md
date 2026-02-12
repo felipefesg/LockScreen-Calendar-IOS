@@ -17,7 +17,7 @@ Unlike static widgets, this script draws a dynamic calendar directly onto your c
 ### 1. Requirements
 
 * Install the **[Scriptable](https://www.google.com/search?q=https://apps.apple.com/app/scriptable/id1405459188)** app from the App Store.
-* Install the **Shortcuts** (Atalhos) app (built-in on iOS).
+* Install the **[Shortcuts](#-source-code)**.
 
 ### 2. Scriptable Setup
 
