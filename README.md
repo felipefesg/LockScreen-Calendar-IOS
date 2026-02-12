@@ -51,6 +51,11 @@ To ensure the script correctly fetches your background every time, follow these 
 ## 🔗 Links & Media
 
 ### Screenshots
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/5605a295-833f-429b-b944-13fbd973c9c6" width="250" alt="LOCKSCREEN">
+  <img src="https://github.com/user-attachments/assets/62c9acf1-6cb0-4f8b-82b7-8d6ce9f80257" width="250" alt="SHORTCUT">
+  <img src="https://github.com/user-attachments/assets/47f87a03-a16e-418d-96e8-23cec6227dbf" width="250" alt="AUTOMATION">
+</p>
 
 ### Download & Resources
 * 📥 **[iOS Shortcut](https://www.icloud.com/shortcuts/e4394783a9294570bfd42d9388f12382)** - Click here to import the shortcut to your iPhone.
