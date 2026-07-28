@@ -66,30 +66,74 @@ To ensure the script correctly fetches your background every time, follow these 
 ---
 
 ```javascript
-// Tela de bloqueio estilo Samsung IOS
+// ============================================================
+// Lock Screen Calendar - layout fiel ao Samsung One UI AOD
+// Versao 3 - roda no app Scriptable
+// ============================================================
+// DIFERENCAS DESTA VERSAO (pra ficar mais parecido com o Samsung):
+// 1) Dia atual agora tem CIRCULO PREENCHIDO (nao mais so contorno),
+//    igual ao widget de calendario do One UI, com o numero em
+//    cor escura por cima.
+// 2) Rotulo do mes ficou PEQUENO e alinhado a esquerda, no canto
+//    superior do grid (estilo "JUL" ou "Julho"), em vez de um
+//    texto gigante centralizado.
+// 3) Numeros dos dias usam fonte LEVE (nao mais negrito), como
+//    no Samsung. So o dia de hoje fica em peso mais forte.
+// 4) Cabecalho dos dias da semana ficou mais discreto (opacidade
+//    reduzida), so o domingo em vermelho, igual ao padrao Samsung.
+// 5) Espacamento do grid um pouco mais compacto/apertado.
+// ============================================================
 
-// ===== CONFIG =====
+// ===================== CONFIG =====================
 const CONFIG = {
-  firstDayOfWeek: 0,        // 0 = Sunday (Samsung style)
-  overlayOpacity: 0.25,      // Darken wallpaper slightly
-  monthOffsetX: -150,
+  // --- Idioma / formato ---
+  locale: "pt-BR",
+  firstDayOfWeek: 0,            // 0 = domingo (padrao Samsung)
+
+  // --- Legibilidade sobre o papel de parede ---
+  // O AOD real do Samsung fica sobre uma tela PRETA. Aqui estamos
+  // sobre uma foto, entao um leve escurecimento ajuda a leitura.
+  overlayOpacity: 0.20,
+  useReadabilityPanel: true,
+  panelOpacity: 0.30,
+  panelPaddingX: 22,
+  panelPaddingY: 16,
+  panelCornerRadius: 24,
+
+  // --- Posicionamento ---
+  monthOffsetX: 0,
   monthOffsetY: 0,
   weekdaysOffsetY: 0,
-  circleScale: 0.8           // Relative size of the current day circle
-};
+  verticalPosition: 0.62,
 
-// ===== SCREEN =====
+  // --- Estilo (cores no padrao Samsung: branco + vermelho no domingo) ---
+  textColor: "#ffffff",
+  textColorDim: "#c9c9c9",      // cor mais apagada do cabecalho de dias
+  weekendColor: "#ff453a",
+  todayCircleColor: "#ffffff",  // cor do circulo PREENCHIDO do dia atual
+  todayTextColor: "#1c1c1e",    // cor do numero DENTRO do circulo (escura, contraste)
+  eventDotColor: "#ffd60a",
+
+  // --- Recursos opcionais ---
+  showEventDots: true,
+  showClock: false,
+  clock24h: true
+};
+// ===================== FIM DO CONFIG =====================
+
+
+// ===== TELA =====
 const screen = Device.screenSize();
 const width = screen.width;
 const height = screen.height;
 
-// ===== DATE =====
+// ===== DATA =====
 const today = new Date();
 const currentYear = today.getFullYear();
 const currentMonth = today.getMonth();
 const currentDay = today.getDate();
 
-// ===== BACKGROUND IMAGE =====
+// ===== IMAGEM DE FUNDO (vem do Atalho) =====
 let bgImage = null;
 if (args.images && args.images.length > 0) {
   bgImage = args.images[0];
@@ -102,108 +146,185 @@ if (args.images && args.images.length > 0) {
   }
 }
 
-// ===== DRAW CONTEXT =====
+if (!bgImage) {
+  const alert = new Alert();
+  alert.title = "Nenhuma foto recebida";
+  alert.message = "Rode este script a partir do Atalho, passando uma foto como parametro de entrada.";
+  alert.addAction("OK");
+  await alert.presentAlert();
+  Script.complete();
+}
+
+// ===== BUSCA DIAS COM EVENTO NO MES ATUAL =====
+async function getDaysWithEvents() {
+  const daysWithEvent = new Set();
+  if (!CONFIG.showEventDots) return daysWithEvent;
+  try {
+    const startDate = new Date(currentYear, currentMonth, 1);
+    const endDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59);
+    const events = await CalendarEvent.between(startDate, endDate);
+    events.forEach(e => daysWithEvent.add(new Date(e.startDate).getDate()));
+  } catch (err) {
+    // sem permissao ou erro: segue sem bolinhas
+  }
+  return daysWithEvent;
+}
+
+// ===== CONTEXTO DE DESENHO =====
 const ctx = new DrawContext();
 ctx.size = new Size(width, height);
 ctx.respectScreenScale = true;
-ctx.opaque = false;  
+ctx.opaque = false;
 
-// ===== DRAW WALLPAPER =====
-if (bgImage) {
-  const imgSize = bgImage.size;
-  const imgAspect = imgSize.width / imgSize.height;
-  const screenAspect = width / height;
+// ===== DESENHA O PAPEL DE PAREDE =====
+const imgSize = bgImage.size;
+const imgAspect = imgSize.width / imgSize.height;
+const screenAspect = width / height;
 
-  let drawRect;
-  if (imgAspect > screenAspect) {
-    const newWidth = height * imgAspect;
-    const xOffset = (newWidth - width) / 2;
-    drawRect = new Rect(-xOffset, 0, newWidth, height);
-  } else {
-    const newHeight = width / imgAspect;
-    const yOffset = (newHeight - height) / 2;
-    drawRect = new Rect(0, -yOffset, width, newHeight);
-  }
-
-  ctx.drawImageInRect(bgImage, drawRect);
-
-  if (CONFIG.overlayOpacity > 0) {
-    ctx.setFillColor(new Color("#000000", CONFIG.overlayOpacity));
-    ctx.fillRect(new Rect(0, 0, width, height));
-  }
+let drawRect;
+if (imgAspect > screenAspect) {
+  const newWidth = height * imgAspect;
+  const xOffset = (newWidth - width) / 2;
+  drawRect = new Rect(-xOffset, 0, newWidth, height);
+} else {
+  const newHeight = width / imgAspect;
+  const yOffset = (newHeight - height) / 2;
+  drawRect = new Rect(0, -yOffset, width, newHeight);
 }
 
-// ===== CALENDAR LAYOUT =====
-const START_Y = height * 0.62;
-const GRID_SPACING = width / 9;
-const FONT_DAY = GRID_SPACING * 0.55;
-const FONT_WEEK = GRID_SPACING * 0.40;
-const FONT_MONTH = GRID_SPACING * 0.90;
+ctx.drawImageInRect(bgImage, drawRect);
+
+if (CONFIG.overlayOpacity > 0) {
+  ctx.setFillColor(new Color("#000000", CONFIG.overlayOpacity));
+  ctx.fillRect(new Rect(0, 0, width, height));
+}
+
+// ===== LAYOUT DO CALENDARIO (grid mais compacto, estilo Samsung) =====
+const START_Y = height * CONFIG.verticalPosition;
+const GRID_SPACING = width / 9.5;
+const FONT_DAY = GRID_SPACING * 0.50;
+const FONT_WEEK = GRID_SPACING * 0.34;
+const FONT_MONTH = GRID_SPACING * 0.42;   // rotulo do mes PEQUENO, estilo Samsung
 const totalWidth = GRID_SPACING * 7;
 const startX = (width - totalWidth) / 2;
 
-// ===== MONTH NAME =====
-const monthNames = ["Jan.","Feb.","Mar.","Apr.","May","Jun.","Jul.","Aug.","Sep.","Oct.","Nov.","Dec."];
-ctx.setFont(Font.boldSystemFont(FONT_MONTH));
-ctx.setTextColor(new Color("#ffffff"));
-ctx.setTextAlignedCenter();
-ctx.drawText(
-  monthNames[currentMonth],
-  new Point(width / 2 + CONFIG.monthOffsetX, START_Y - GRID_SPACING*2.4 + CONFIG.monthOffsetY)
+// ===== PAINEL DE LEGIBILIDADE (atras do calendario) =====
+if (CONFIG.useReadabilityPanel) {
+  const panelTop = START_Y - GRID_SPACING * 1.9 - CONFIG.panelPaddingY;
+  const panelBottom = START_Y + GRID_SPACING * 6.1 + CONFIG.panelPaddingY;
+  const panelLeft = startX - CONFIG.panelPaddingX;
+  const panelWidth = totalWidth + CONFIG.panelPaddingX * 2;
+  const panelHeight = panelBottom - panelTop;
+
+  const panelPath = new Path();
+  panelPath.addRoundedRect(
+    new Rect(panelLeft, panelTop, panelWidth, panelHeight),
+    CONFIG.panelCornerRadius,
+    CONFIG.panelCornerRadius
+  );
+  ctx.addPath(panelPath);
+  ctx.setFillColor(new Color("#000000", CONFIG.panelOpacity));
+  ctx.fillPath();
+}
+
+// ===== ROTULO DO MES (pequeno, alinhado a esquerda - estilo Samsung) =====
+const monthLabelRaw = today.toLocaleDateString(CONFIG.locale, { month: "long", year: "numeric" });
+const monthLabel = monthLabelRaw.charAt(0).toUpperCase() + monthLabelRaw.slice(1);
+ctx.setFont(Font.mediumSystemFont(FONT_MONTH));
+ctx.setTextColor(new Color(CONFIG.textColorDim));
+ctx.setTextAlignedLeft();
+ctx.drawTextInRect(
+  monthLabel,
+  new Rect(startX + CONFIG.monthOffsetX, START_Y - GRID_SPACING * 1.6 + CONFIG.monthOffsetY, totalWidth, FONT_MONTH * 1.4)
 );
 
-// ===== WEEK DAYS =====
-const weekDays = ["S","M","T","W","T","F","S"];
-ctx.setFont(Font.mediumSystemFont(FONT_WEEK));
-
-for (let i = 0; i < 7; i++) {
-  ctx.setTextColor(i === 0 ? new Color("#ff3b30") : new Color("#ffffff"));
+// ===== RELOGIO (opcional) =====
+if (CONFIG.showClock) {
+  const hours = CONFIG.clock24h
+    ? today.getHours().toString().padStart(2, "0")
+    : (today.getHours() % 12 || 12).toString();
+  const minutes = today.getMinutes().toString().padStart(2, "0");
+  ctx.setFont(Font.lightSystemFont(FONT_MONTH * 1.3));
+  ctx.setTextColor(new Color(CONFIG.textColor));
+  ctx.setTextAlignedRight();
   ctx.drawTextInRect(
-    weekDays[i],
-    new Rect(startX + i * GRID_SPACING, START_Y - GRID_SPACING*0.7 + CONFIG.weekdaysOffsetY, GRID_SPACING, GRID_SPACING)
+    `${hours}:${minutes}`,
+    new Rect(0, START_Y - GRID_SPACING * 1.6 + CONFIG.monthOffsetY, startX + totalWidth, FONT_MONTH * 1.4)
   );
 }
 
-// ===== DRAW MONTH =====
-const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-const startOffset = (firstDay - CONFIG.firstDayOfWeek + 7) % 7;
+// ===== DIAS DA SEMANA (discreto, so domingo em vermelho) =====
+const weekDaysBase = ["D","S","T","Q","Q","S","S"];
+const weekDays = weekDaysBase
+  .slice(CONFIG.firstDayOfWeek)
+  .concat(weekDaysBase.slice(0, CONFIG.firstDayOfWeek));
 
-for (let d = 1; d <= daysInMonth; d++) {
-  const index = startOffset + d - 1;
-  const col = index % 7;
-  const row = Math.floor(index / 7);
-  const x = startX + col * GRID_SPACING;
-  const y = START_Y + row * GRID_SPACING;
-
-  const isWeekend = col === 0;
-  const isToday = d === currentDay;
-
-  if (isToday) {
-    const circleSize = GRID_SPACING * CONFIG.circleScale;
-    ctx.setStrokeColor(new Color("#ffffff"));
-    ctx.setLineWidth(2);
-    ctx.strokeEllipse(
-      new Rect(x + (GRID_SPACING - circleSize)/2, y + (GRID_SPACING - circleSize)/2, circleSize, circleSize)
-    );
-    ctx.setTextColor(new Color("#ffffff"));
-  } else if (isWeekend) {
-    ctx.setTextColor(new Color("#ff3b30"));
-  } else {
-    ctx.setTextColor(new Color("#ffffff"));
-  }
-
-  ctx.setFont(Font.boldSystemFont(FONT_DAY));
-  ctx.setTextAlignedCenter();
-  ctx.drawTextInRect(d.toString(), new Rect(x, y + GRID_SPACING*0.18, GRID_SPACING, GRID_SPACING));
+ctx.setFont(Font.regularSystemFont(FONT_WEEK));
+for (let i = 0; i < 7; i++) {
+  const isSundayCol = weekDays[i] === "D";
+  ctx.setTextColor(isSundayCol ? new Color(CONFIG.weekendColor) : new Color(CONFIG.textColorDim));
+  ctx.drawTextInRect(
+    weekDays[i],
+    new Rect(startX + i * GRID_SPACING, START_Y - GRID_SPACING * 0.65 + CONFIG.weekdaysOffsetY, GRID_SPACING, GRID_SPACING)
+  );
 }
 
-// ===== EXPORT =====
-const image = ctx.getImage();
-const fm = FileManager.local();
-const path = fm.joinPath(fm.temporaryDirectory(), "calendar_current_month.png");
-fm.writeImage(path, image);
-Script.setShortcutOutput(path);
-Script.complete();
+// ===== GRID DE DIAS + BOLINHAS DE EVENTO =====
+async function drawMonth() {
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const startOffset = (firstDay - CONFIG.firstDayOfWeek + 7) % 7;
+  const daysWithEvent = await getDaysWithEvents();
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const index = startOffset + d - 1;
+    const col = index % 7;
+    const row = Math.floor(index / 7);
+    const x = startX + col * GRID_SPACING;
+    const y = START_Y + row * GRID_SPACING;
+
+    const dayOfWeekLabel = weekDaysBase[(col + CONFIG.firstDayOfWeek) % 7];
+    const isSunday = dayOfWeekLabel === "D" && ((col + CONFIG.firstDayOfWeek) % 7 === 0);
+    const isToday = d === currentDay;
+
+    if (isToday) {
+      // Circulo PREENCHIDO, igual ao widget Samsung
+      const circleSize = GRID_SPACING * 0.82;
+      ctx.setFillColor(new Color(CONFIG.todayCircleColor));
+      ctx.fillEllipse(
+        new Rect(x + (GRID_SPACING - circleSize) / 2, y + (GRID_SPACING - circleSize) / 2, circleSize, circleSize)
+      );
+      ctx.setTextColor(new Color(CONFIG.todayTextColor));
+      ctx.setFont(Font.boldSystemFont(FONT_DAY));
+    } else if (isSunday) {
+      ctx.setTextColor(new Color(CONFIG.weekendColor));
+      ctx.setFont(Font.lightSystemFont(FONT_DAY));
+    } else {
+      ctx.setTextColor(new Color(CONFIG.textColor));
+      ctx.setFont(Font.lightSystemFont(FONT_DAY));
+    }
+
+    ctx.setTextAlignedCenter();
+    ctx.drawTextInRect(d.toString(), new Rect(x, y + GRID_SPACING * 0.18, GRID_SPACING, GRID_SPACING));
+
+    if (daysWithEvent.has(d) && !isToday) {
+      const dotSize = GRID_SPACING * 0.07;
+      ctx.setFillColor(new Color(CONFIG.eventDotColor));
+      ctx.fillEllipse(
+        new Rect(x + GRID_SPACING / 2 - dotSize / 2, y + GRID_SPACING * 0.74, dotSize, dotSize)
+      );
+    }
+  }
+
+  // ===== EXPORTA =====
+  const image = ctx.getImage();
+  const fm = FileManager.local();
+  const path = fm.joinPath(fm.temporaryDirectory(), "calendar_current_month.png");
+  fm.writeImage(path, image);
+  Script.setShortcutOutput(path);
+  Script.complete();
+}
+
+await drawMonth();
 
 ```
