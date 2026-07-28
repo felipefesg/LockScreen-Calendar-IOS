@@ -66,24 +66,6 @@ To ensure the script correctly fetches your background every time, follow these 
 ---
 
 ```javascript
-// ============================================================
-// Lock Screen Calendar - layout fiel ao Samsung One UI AOD
-// Versao 3 - roda no app Scriptable
-// ============================================================
-// DIFERENCAS DESTA VERSAO (pra ficar mais parecido com o Samsung):
-// 1) Dia atual agora tem CIRCULO PREENCHIDO (nao mais so contorno),
-//    igual ao widget de calendario do One UI, com o numero em
-//    cor escura por cima.
-// 2) Rotulo do mes ficou PEQUENO e alinhado a esquerda, no canto
-//    superior do grid (estilo "JUL" ou "Julho"), em vez de um
-//    texto gigante centralizado.
-// 3) Numeros dos dias usam fonte LEVE (nao mais negrito), como
-//    no Samsung. So o dia de hoje fica em peso mais forte.
-// 4) Cabecalho dos dias da semana ficou mais discreto (opacidade
-//    reduzida), so o domingo em vermelho, igual ao padrao Samsung.
-// 5) Espacamento do grid um pouco mais compacto/apertado.
-// ============================================================
-
 // ===================== CONFIG =====================
 const CONFIG = {
   // --- Idioma / formato ---
