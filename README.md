@@ -52,7 +52,7 @@ To ensure the script correctly fetches your background every time, follow these 
 
 ### Screenshots
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/5605a295-833f-429b-b944-13fbd973c9c6" width="250" alt="LOCKSCREEN">
+  <img src="https://github.com/user-attachments/assets/9ff4c8aa-d122-41d6-8b6a-0df08f0f6293" width="250" alt="LOCKSCREEN">
   <img src="https://github.com/user-attachments/assets/62c9acf1-6cb0-4f8b-82b7-8d6ce9f80257" width="250" alt="SHORTCUT">
   <img src="https://github.com/user-attachments/assets/47f87a03-a16e-418d-96e8-23cec6227dbf" width="250" alt="AUTOMATION">
 </p>
